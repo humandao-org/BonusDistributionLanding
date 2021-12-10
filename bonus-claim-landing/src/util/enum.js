@@ -4,6 +4,6 @@ export const ClaimStatus = {
   CanClaim: 2,
   CannotClaim: 3,
   Processing: 4,
-  ClaimDone: 5,
-  HasClaimed: 6
+  ClaimDone: 5, // claim just done
+  HasClaimed: 6 // previously claimed
 }
