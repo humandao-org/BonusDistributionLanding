@@ -1,36 +1,98 @@
 <template>
-  <div>
-    <h1>humanDAO</h1>
-    <div>Claim your bonus and your genesis NFT here!</div>
+  <div style="position: relative">
+  <h1>HDAO bonus rewards claim</h1>
+  <div><b>+</b></div>
+  <h1>humanDAO NFT Genesis Badge</h1>
+  <p style="position: relative; top: -1rem; left: 4.5rem;">by <a href="https://twitter.com/Cre8vDane" target="_blank">0xDane.eth</a> </p>
+  <div if="isConnected" class="block">
+      <h2 v-if="isConnected && !falseNetwork">Connected with: <span class="purple">{{ $store.state.web3.walletId }}</span> on <span class="purple">{{ $store.getters.getNetwork.name }}</span></h2>
+      <h2 v-else-if="falseNetwork">Wrong network detected. Please change your network to either Ethereum or Polygon</h2>
+      <h2 v-else>Wallet not connected</h2>
+      <button v-if="!isConnected" id="claim" @click="initiateConnection">Connect wallet</button>
+  </div>
+  <div id="eligibility-status">
+    Claim status:
+    <span v-if="unknownEligibility">Please connect a wallet to the Ethereum or Polygon network and we will check your eligibility.</span>
+    <span v-else-if="checkingClaim">We're checking whether this wallet is eligible for rewards.</span>
+    <span v-else-if="notEligible">We're sorry but this wallet is not eligible for rewards.</span>
+    <span v-else-if="isEligible">Congratz. This wallet is eligible for rewards.</span>
+    <span v-else-if="doingClaim">Your claim is being processed. Please wait.</span>
+    <span v-else-if="claimSucceeded">Done! Your rewards have been succesfully claimed.</span>
+    <span v-else-if="hasClaimed">Rewards have already been claimed for this wallet.</span>
+  </div>
+	<br>
+    <div id="intro">
+   </div>
+    <div v-if="!claimSucceeded" id="claimable" class="block">
+      <h1>Rewards Available</h1>
+      <!-- <h2>+Genesis NFT Badge</h2> -->
+      <h1><input v-model="claimAmount" type="number" /> $HDAO</h1>
+      <div>(Your Genesis Badge will be automatically minted for you when you claim your bonus.)</div>
+      <button v-if="isEligible" id="claim" @click="processClaim">Claim bonus</button>
+      <!-- <button id="claim" @click="checkClaim">Check Claim</button> -->
+    </div>
+    <div v-if="claimSucceeded" id="congrats" class="block">
+      <h1>Congratulations!</h1>
+      <h3>You just recieved:</h3>
+      <h1><input v-model="claimAmount" type="number" /> $HDAO</h1>
+      <h2>plus your very own humanDAO NFT Genesis Badge!</h2>
+      <h1>🤜🤛</h1>
+    </div>
+
     <br/>
     <br/>
+    <!-- //
     <button @click="initiateConnection">Connect wallet</button>
-    <!-- <button @click="endConnection">Disconnect wallet</button> -->
+    <button @click="endConnection">Disconnect wallet</button>
     <div>ChainId: {{ $store.state.web3.networkId }}</div>
     <div>WalletId: {{ $store.state.web3.walletId }}</div>
     <div>Connected to: {{ $store.getters.getNetwork }} </div>
     <br/>
     <br/>
-    <div>
-      Show claim amount: <input v-model="claimAmount" type="number" />
-    </div>
-    <button @click="checkClaim">Check claim amount</button>
+    //-->
+    
   </div>
+
 </template>
 
 <script>
+import { ClaimStatus } from '../util/enum'
 
 export default {
   name: 'ClaimComponent',
   props: {
     msg: String
   },
-  // beforeCreate() {
-    // this.$store.dispatch('connectWallet')
-  // },
   computed: {
     claimAmount() {
       return this.$store.state.claimAmount
+    },
+    isConnected() {
+      return !!this.$store.state.web3.walletId
+    },
+    unknownEligibility() {
+      return this.$store.state.web3.claimStatus === ClaimStatus.Unknown
+    },
+    notEligible() {
+      return this.$store.state.web3.claimStatus === ClaimStatus.CannotClaim
+    },
+    isEligible() {
+      return this.$store.state.web3.claimStatus === ClaimStatus.CanClaim
+    },
+    checkingClaim() {
+      return this.$store.state.web3.claimStatus === ClaimStatus.Verifying
+    },
+    doingClaim() {
+      return this.$store.state.web3.claimStatus === ClaimStatus.Processing
+    },
+    claimSucceeded() {
+      return this.$store.state.web3.claimStatus === ClaimStatus.ClaimDone
+    },
+    hasClaimed() {
+      return this.$store.state.web3.claimStatus === ClaimStatus.HasClaimed
+    },
+    falseNetwork() {
+      return this.isConnected && !this.$store.state.web3.correctNetwork
     }
   },
   methods: {
@@ -42,9 +104,13 @@ export default {
     },
     checkClaim () {
       this.$store.dispatch('findClaim')
+    },
+    processClaim() {
+      this.$store.dispatch('processClaim', { wm: this })
     }
   }
 }
+
 </script>
 
 <style scoped>

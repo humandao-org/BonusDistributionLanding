@@ -13,6 +13,7 @@
     "@walletconnect/web3-provider": "^1.6.6",
     "core-js": "^3.6.5",
     "vue": "^2.6.11",
+    "vue-confetti": "^2.2.2",
     "vuex": "^3.6.2",
     "web3": "^1.6.1",
     "web3modal": "^1.9.4"
