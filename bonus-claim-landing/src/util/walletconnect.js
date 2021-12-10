@@ -1,3 +1,4 @@
+// import Web3 from "web3";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import Web3Modal from "web3modal";
 
@@ -23,12 +24,8 @@ export async function createProvider() {
     cacheProvider: true, // optional
     providerOptions // required
   });
-  console.log('web3 modal created')
   const provider = await web3Modal.connect();
-  console.log('after awaiting connect method')
-  const result = await web3Modal.toggleModal();
-  console.log('after awaiting toggle modal', result)
-
+  await web3Modal.toggleModal();
   return provider
 }
 

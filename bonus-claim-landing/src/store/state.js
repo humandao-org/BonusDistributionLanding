@@ -1,11 +1,10 @@
 let state = {
   web3: {
-    isInjected: false,
-    web3Instance: null,
+    isInjected: false, // not in use
+    web3Instance: null, // not in use
+    provider: null,
     networkId: null,
     walletId: null,
-    coinbase: null,
-    balance: null,
     error: null,
     networks: [
       { id: 1, name: 'Ethereum' },

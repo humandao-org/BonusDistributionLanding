@@ -13,7 +13,6 @@ export const store = new Vuex.Store({
   getters: {
     getNetwork: state => {
       let networkId = state.web3.networkId
-      console.log('get network using id: ', networkId)
       if (networkId) {
       return state.web3.networks.find(nw => nw.id === networkId)
     }
@@ -21,6 +20,12 @@ export const store = new Vuex.Store({
     }
   },
   mutations: {
+    setProvider(state, provider) {
+      state.web3.provider = provider
+    },
+    clearProvider(state) {
+      state.web3.provider = null
+    },
     setChainId(state, id) { 
       state.web3.networkId = id
     },
@@ -32,40 +37,47 @@ export const store = new Vuex.Store({
     }
   },
   actions: {
-    async initializeWallet({ commit }) {
-      console.log('calling action', createProvider)
-      // const result = await web3.enable();
-      const provider = await createProvider()
-      console.log('obtained provider: ', provider)
+    async connectWallet({ commit }) {
+      // Creates provider and starts connection
+      const walletProvider = await createProvider()
 
+      // Creates a web3 object using the providers 
+      // Gets chain and wallet plus sets up change notifies
+      const web3 = new Web3(walletProvider);
 
-        // Subscribe to chainId change
-      provider.on("chainChanged", (chainId) => {
-        console.log('chain changed to: ', chainId);
-        commit('setChainId', parseInt(chainId, 16)) // Getting the chain id hex notation
-      });
-
-      // regular web3 provider methods
-      const web3 = new Web3(provider);
-      console.log('after calling new Web3', web3)
+      // commit('setProvider', walletProvider) // Tried to commit this to state but resulted in buffer overrun ???
 
       const accounts = await web3.eth.getAccounts();
       const chain = await web3.eth.getChainId();
       commit('setChainId', chain)
       commit('setWalletId', accounts[0])
-      console.log(accounts);
-      console.log(chain)
+
+      walletProvider.on("chainChanged", (chainId) => {
+        commit('setChainId', parseInt(chainId, 16)) // Getting the chain id hex notation
+      });
+
+      walletProvider.on("accountsChanged", (accounts) => {
+        commit('setWalletId', accounts[0])
+      });
+      
+      walletProvider.on("disconnect", (code, reason) => {
+        console.log(code, reason);
+      });
     },
+
+    async disconnectWallet({ state, commit }) { 
+      await state.web3.provider.disconnect()
+      commit('clearProvider')
+    },
+
     async findClaim({ state, getters, commit }) {
       const walletAddress =  state.web3.walletId 
       const network = getters.getNetwork
       if (walletAddress && network) {
         const claimURL = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=${network.name.toUpperCase()}`
-        console.log(claimURL)
         const response = await fetch(claimURL)
         const result = await response.json()
         if (result.beneficiary && !result.claimed) {
-          console.log(result.amount)
           var claim = BigInt(result.amount) / 1000000000000n //eslint-disable-line
           commit('setClaimableAmount', parseInt(claim) / 1000000) 
         } else {
