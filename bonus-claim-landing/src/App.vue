@@ -12,7 +12,6 @@
 <script>
 import BonusClaim from './components/BonusClaim.vue'
 import { ClaimStatus } from './util/enum.js'
-
 export default {
   name: 'App',
   components: {
@@ -27,12 +26,10 @@ export default {
 </script>
 
 <style>
-
 body {
   margin:0 auto;
   background: white;
 }
-
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -42,27 +39,21 @@ body {
   background: white;
   padding: 1em;
 }
-
-
 #logo {
   width: 100%;
   height: 100%;
   max-width: 300px;
 }
-
 h1 {
   margin:0;
 }
-
 h2 {
   margin: 0;
   font-size: 1em;
 }
-
 a {
   text-decoration: none;
 }
-
 input {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -72,34 +63,29 @@ input {
   padding:0;
   font-size: 1em;
   width: 13rem;
-  border-radius: 0.5rem;
+  border: none;
   pointer-events: none; 
   margin: 0.5rem 1rem;
 }
 
+
 .purple {
   color: #75529d;
 }
-
 .block {
   font-size: 1em;
-  margin: 2rem;
 }
-
 input[type=number] {
   -moz-appearance: textfield;
 }
-
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
-
 input:focus {
   outline: none;
 }
-
 #claim, button {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   text-align: center;
@@ -115,14 +101,10 @@ input:focus {
 
 #claimable {
 }
-
 #not-claimable {
 }
-
 #intro {
 }
-
 #congrats {
 }
-
 </style>
