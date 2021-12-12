@@ -1,4 +1,5 @@
 import { ClaimStatus } from '../util/enum'
+import { BigNumber } from 'bignumber.js';
 
 let state = {
   web3: {
@@ -16,7 +17,7 @@ let state = {
     ],
     claimParams: {}
   },
-  claimAmount: 0
+  claimAmount: new BigNumber(0)
 }
 
 export default state

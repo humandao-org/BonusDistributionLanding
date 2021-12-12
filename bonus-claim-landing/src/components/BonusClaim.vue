@@ -62,16 +62,18 @@
 
 <script>
 import { ClaimStatus } from '../util/enum'
+// import { BigNumber } from 'bignumber.js';
+
 export default {
   name: 'ClaimComponent',
   props: {
     msg: String
   },
   computed: {
-    claimAmount() {
-      // Converting claim here to allow the full amount to remain intact so it can be used for the contract call
-      let amount = this.$store.state.claimAmount / 1000000000000n // remove most decimals 
-      return parseInt(amount) / 1000000 // convert to int to allow a result with decimals 
+    claimAmount() { 
+      return this.$store.state.claimAmount.toNumber() === 0 ? 0 : this.$store.state.claimAmount.shiftedBy(-18).toFixed(4)
+      // let amount = BigInt(this.$store.state.claimAmount) / 1000000000000n //eslint-disable-line  
+      // return parseInt(amount) / 1000000 // convert to int to allow a result with some decimals 
     },
     isConnected() {
       return !!this.$store.state.web3.walletId
@@ -83,8 +85,8 @@ export default {
       return this.$store.state.web3.claimStatus === ClaimStatus.CannotClaim
     },
     isEligible() {
-      // return this.$store.state.web3.claimStatus === ClaimStatus.CanClaim
       return true
+      // return this.$store.state.web3.claimStatus === ClaimStatus.CanClaim
     },
     checkingClaim() {
       return this.$store.state.web3.claimStatus === ClaimStatus.Verifying

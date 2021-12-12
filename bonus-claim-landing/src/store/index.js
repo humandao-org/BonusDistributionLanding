@@ -1,9 +1,10 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import state from './state'
-import { createProvider, web3provider } from '../util/walletconnect' // claimABI
+import { createProvider, web3provider, claimABI } from '../util/walletconnect' // ERC20TransferABI
 import { ClaimStatus } from '../util/enum'
 import Web3 from "web3";
+import { BigNumber } from 'bignumber.js';
 
 Vue.use(Vuex)
 
@@ -42,7 +43,7 @@ export const store = new Vuex.Store({
       state.web3.walletId = id
     },
     setClaimableAmount(state, amount) {
-      state.claimAmount = amount
+      state.claimAmount = new BigNumber(amount)
     },
     setClaimStatus(state, status) {
       state.web3.claimStatus = status
@@ -93,7 +94,7 @@ export const store = new Vuex.Store({
     },
 
     async verifyClaim({ state, getters, commit }) {
-      const walletAddress =  state.web3.walletId 
+      const walletAddress =  state.web3.walletId // '0xc639D69168365CC56E203C59db1Cc9016cEbec4b' // Checking against an eligible wallet // 
       const network = getters.getNetwork
       if (walletAddress && network) {
         if (state.web3.correctNetwork) {
@@ -104,7 +105,9 @@ export const store = new Vuex.Store({
           console.log('result of checking claim', result)
           if (result.beneficiary && !result.claimed) {
             // var claim = BigInt(result.currentBonusAmount) / 1000000000000n //eslint-disable-line
-            commit('setClaimableAmount', BigInt(result.currentBonusAmount)) //eslint-disable-line 
+            // let big = new BigNumber(result.currentBonusAmount)
+            // console.log(big)
+            commit('setClaimableAmount', result.currentBonusAmount) //eslint-disable-line 
             //parseInt(claim) / 1000000) 
             commit('setClaimStatus', ClaimStatus.CanClaim)
             const { address, index, proof, currentBonusAmount } = result
@@ -126,82 +129,78 @@ export const store = new Vuex.Store({
 
     async processClaim({ commit, state }, { wm }) {
       commit('setClaimStatus', ClaimStatus.Processing)
-      console.log(web3provider)
       const web3 = new Web3(web3provider);
       web3.eth.getBlockNumber(function (error, result) {
         console.log(result)
       })
       try {
-        const ERC20TransferABI = [
-          {
-            constant: false,
-            inputs: [
-              {
-                name: "_to",
-                type: "address",
-              },
-              {
-                name: "_value",
-                type: "uint256",
-              },
-            ],
-            name: "transfer",
-            outputs: [
-              {
-                name: "",
-                type: "bool",
-              },
-            ],
-            payable: false,
-            stateMutability: "nonpayable",
-            type: "function",
-          },
-          {
-            constant: true,
-            inputs: [
-              {
-                name: "_owner",
-                type: "address",
-              },
-            ],
-            name: "balanceOf",
-            outputs: [
-              {
-                name: "balance",
-                type: "uint256",
-              },
-            ],
-            payable: false,
-            stateMutability: "view",
-            type: "function",
-          },
-        ]
-        // const MATIC_ADDRESS = '0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0'
-        // const DAI_ADDRESS = '0x6b175474e89094c44da98b954eedeac495271d0f'
-        // const REVV_ADDRESS = '0x70c006878a5a50ed185ac4c87d837633923de296'
-        // const RAIDER_ADDRESS = '0xcd7361ac3307d1c5a46b63086a90742ff44c63b3'
-        // const CUDOS_ADDRESS = '0x817bbdbc3e8a1204f3691d14bb44992841e3db35'
-        const AURUM_ADDRESS = '0x34d4ab47bee066f361fa52d792e69ac7bd05ee23'
-        // const MEDA_ADDRESS = '0x9130990dd16ed8be8be63e46cad305c2c339dac9'
 
+        /*
+        // Testing contract flow by sending some tokens between wallets
+        //
+        console.log('sending some tokens')
+        const AURUM_ADDRESS = '0x34d4ab47bee066f361fa52d792e69ac7bd05ee23'
         const tokenInstance = new web3.eth.Contract(ERC20TransferABI, AURUM_ADDRESS)
         console.log('getting balance from this wallet address: ', state.web3.walletId)
         const result = await tokenInstance.methods.balanceOf(state.web3.walletId).call().catch(err => {
           console.log('getting balance failed', err)
         })
         console.log("Got the following balance", result)
-        commit('setClaimableAmount', result) 
-        
-        console.log('sending some tokens')
+        commit('setClaimableAmount', result) //eslint-disable-line  
+
         const receiverAddress = '0x1db669337a4bA132A81caA2dcDE257fbfAEa4CF7'
-        const transferResult = await tokenInstance.methods
-          .transfer(receiverAddress, state.claimAmount) // "1000000000000000000"
+        const claimResult = await tokenInstance.methods
+          .transfer(receiverAddress, store.state.claimAmount) // state.claimAmount
           .send({ from: state.web3.walletId })
+        */
+
+        const claimContract = '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b'
+        const contractInstance = new web3.eth.Contract(claimABI, claimContract)
+        let params = Object.assign({}, state.web3.claimParams)
+        params.address = '0x1db669337a4bA132A81caA2dcDE257fbfAEa4CF7' // overwriting with an address that has no claim to ensure I do not screw up my own claim by running this prematurely
+        // params.currentBonusAmount = store.state.claimAmount
+        params.maxBonusAmount = store.state.claimAmount
+        console.log('calling method with these params', params)
+
+        const claimResult = await contractInstance.methods.claim(params.index, params.address, params.maxBonusAmount, params.proof).call().catch(err => {
+          commit('setClaimStatus', ClaimStatus.ClaimFailed)
+          console.log(err)
+        })
+        console.log('claimResult', claimResult)
+        console.log(wm)
+
+        /*
+        // This part uses `send()` and awaits mining
+        // Also it checks contract for isClaimed state before it assumes claim is done
+        let checkInProgress = false
+        var claimResult = await contractInstance.methods.claim(params.index, params.address, params.maxBonusAmount, params.proof).send({ from: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe' })
           .on('transactionHash', function(hash){
               console.log("transactionHash", hash);
           })
-          .on('confirmation', function(one, receipt){
-              console.log("Transaction confirmed", one, receipt);
+          .on('confirmation', async function(count, receipt){
+              console.log("Transaction confirmed", count, receipt);
+
+              if (!checkInProgress) {
+                checkInProgress = true // prevents this from being run each time a new block is mined and this call has not returned et
+                const claimContract = '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b'
+                const contractInstance = new web3.eth.Contract(claimABI, claimContract)
+                let params = Object.assign({}, state.web3.claimParams)
+                // console.log('calling method with these params', params)
+                var isClaimedResult = await contractInstance.methods.isClaimed(params.index).call().catch(err => {
+                  // commit('setClaimStatus', ClaimStatus.ClaimFailed)
+                  console.log(err)
+                })
+                // isClaimedResult = true // Simulate true
+                console.log('result of isClaimed call: ', isClaimedResult)
+                if (isClaimedResult) {
+                  console.log('we can show the baloons now')
+                  commit('setClaimStatus', ClaimStatus.ClaimDone)
+                  wm.$confetti.start()
+                } else {
+                  // Allow a new check on the contract to be made on next block confirmation
+                  checkInProgress = false
+                }
+              }
           })
           .on('error', err => {
             console.log('sending failed', err)
@@ -211,45 +210,14 @@ export const store = new Vuex.Store({
               commit('setClaimStatus', ClaimStatus.ClaimFailed)
             }
           })
+          */
+        console.log("Result of the claim call: ", claimResult)
 
-        console.log(wm)
-        console.log("Hash of the transaction: ", transferResult)
-
-        // const expectedBlockTime = 1000
-        // const sleep = (milliseconds) => {
-        //  return new Promise(resolve => setTimeout(resolve, milliseconds))
-        //}
-        /*
-        window.setInterval(async () => {
-          const transactionReceipt = await web3.eth.getTransactionReceipt(transferResult.transactionHash)
-          console.log('transaction receipt', transactionReceipt)
-        }, 20000)
-        */
-        /*
-        // web3.eth.defaultAccount = web3.eth.accounts[0]
-        const claimContract = '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b'
-        const contractInstance = new web3.eth.Contract(claimABI, claimContract)
-        let params = Object.assign({}, state.web3.claimParams)
-        params.address = '0x1db669337a4bA132A81caA2dcDE257fbfAEa4CF7' // overwriting with an address that has no claim
-        params.currentBonusAmount = 1000000n
-        console.log('calling method with these params', params)
-        const claimResult = await contractInstance.methods.claim(params.index, params.address, params.currentBonusAmount, params.proof ).call().catch(err => {
-          commit('setClaimStatus', ClaimStatus.ClaimFailed)
-          console.log(err)
-        })
-        console.log('claimResult', claimResult)
-        if (claimResult) {
-          commit('setClaimStatus', ClaimStatus.ClaimDone)
-          wm.$confetti.start()
-        }
-        */
-        // console.log(state.web3.walletId)
-        // web3.eth.call({ method: 'claim' })
       } catch(e) {
-        console.log(e)
+        console.error('claim failed and was not caught in expected error handler', e)
+        commit('setClaimStatus', ClaimStatus.ClaimFailed)
       }
-      // const accounts = await web3.eth.getAccounts();
-      // console.log(accounts)
+
       /*
       window.setTimeout(() => {
         context.commit('setClaimStatus', ClaimStatus.ClaimDone)
