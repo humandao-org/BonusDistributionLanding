@@ -19,7 +19,7 @@ export default {
   },
   computed: {
     showNFT() {
-      return this.$store.state.web3.claimStatus === ClaimStatus.HasClaimed || this.$store.state.web3.claimStatus === ClaimStatus.ClaimDone
+      return this.$store.state.claimStatus === ClaimStatus.HasClaimed || this.$store.state.claimStatus === ClaimStatus.ClaimDone
     }
   }
 }

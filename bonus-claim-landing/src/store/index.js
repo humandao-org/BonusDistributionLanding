@@ -4,7 +4,9 @@ import state from './state'
 import { createProvider, web3provider, claimABI } from '../util/walletconnect' // ERC20TransferABI
 import { ClaimStatus } from '../util/enum'
 import Web3 from "web3";
-import { BigNumber } from 'bignumber.js';
+import { ethers, BigNumber } from 'ethers'
+// import { BigNumber } from 'bignumber.js';
+import { providers } from "ethers";
 
 Vue.use(Vuex)
 
@@ -15,8 +17,11 @@ export const store = new Vuex.Store({
     getNetwork: state => {
       let networkId = state.web3.networkId
       if (networkId) {
-      return state.web3.networks.find(nw => nw.id === networkId)
-    }
+        const netWork = state.web3.networks.find(nw => nw.id === networkId)
+        if (netWork) {
+          return netWork          
+        }
+      }
     return { id: 0, name: 'none' }
     }
   },
@@ -34,19 +39,27 @@ export const store = new Vuex.Store({
     setChainId(state, id) { 
       state.web3.networkId = id
       if (id === 1 || id === 137) {
-        state.web3.correctNetwork = true
+        state.web3.liveNetwork = true
+        state.web3.testNetwork = false
+      } else if (id === 80001) {
+        state.web3.liveNetwork = false
+        state.web3.testNetwork = true
       } else {
-        state.web3.correctNetwork = false
+        state.web3.liveNetwork = false
+        state.web3.testNetwork = false
       }
     },
     setWalletId(state, id) {
       state.web3.walletId = id
     },
     setClaimableAmount(state, amount) {
-      state.claimAmount = new BigNumber(amount)
+      state.claimAmount = ethers.BigNumber.from(amount)
     },
     setClaimStatus(state, status) {
-      state.web3.claimStatus = status
+      state.claimStatus = status
+    },
+    setRefillStatus(state, payload) {
+      state.refillWallet = payload
     },
     setContractParams(state, payload) {
       state.web3.claimParams = payload
@@ -96,22 +109,23 @@ export const store = new Vuex.Store({
     async verifyClaim({ state, getters, commit }) {
       const walletAddress =  state.web3.walletId // '0xc639D69168365CC56E203C59db1Cc9016cEbec4b' // Checking against an eligible wallet // 
       const network = getters.getNetwork
+      console.log('network', network)
       if (walletAddress && network) {
-        if (state.web3.correctNetwork) {
+        if (state.web3.liveNetwork || state.web3.testNetwork) {
           commit('setClaimStatus', ClaimStatus.Verifying)
-          const claimURL = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=${network.name.toUpperCase()}`
+          // this.$config
+          const claimURLMumbai = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=POLYGON_MUMBAI`
+          const claimURLLive = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=${network.name.toUpperCase()}`
+          const claimURL = state.web3.testNetwork ? claimURLMumbai : claimURLLive
           const response = await fetch(claimURL)
           const result = await response.json()
-          console.log('result of checking claim', result)
+          // console.log('result of checking claim', result)
           if (result.beneficiary && !result.claimed) {
-            // var claim = BigInt(result.currentBonusAmount) / 1000000000000n //eslint-disable-line
-            // let big = new BigNumber(result.currentBonusAmount)
-            // console.log(big)
-            commit('setClaimableAmount', result.currentBonusAmount) //eslint-disable-line 
-            //parseInt(claim) / 1000000) 
+            commit('setClaimableAmount', BigNumber.from(BigInt(result.currentBonusAmount))) //eslint-disable-line 
+            commit('setRefillStatus', result.shouldFillUpBalance)
             commit('setClaimStatus', ClaimStatus.CanClaim)
-            const { address, index, proof, currentBonusAmount } = result
-            commit('setContractParams', { address, index, proof, currentBonusAmount })
+            const { address, index, proof, maxBonusAmount } = result
+            commit('setContractParams', { address, index, proof, maxBonusAmount: BigNumber.from(BigInt(maxBonusAmount)) }) //eslint-disable-line 
           } else if(result.claimed) {
             console.log('has already claimed', result)
             commit('setClaimStatus', ClaimStatus.HasClaimed)
@@ -128,112 +142,46 @@ export const store = new Vuex.Store({
     },
 
     async processClaim({ commit, state }, { wm }) {
-      commit('setClaimStatus', ClaimStatus.Processing)
-      const web3 = new Web3(web3provider);
-      web3.eth.getBlockNumber(function (error, result) {
-        console.log(result)
-      })
+
+      // Wrap with Web3Provider from ethers.js
+      const web3 = new providers.Web3Provider(web3provider);
+
       try {
 
-        /*
-        // Testing contract flow by sending some tokens between wallets
-        //
-        console.log('sending some tokens')
-        const AURUM_ADDRESS = '0x34d4ab47bee066f361fa52d792e69ac7bd05ee23'
-        const tokenInstance = new web3.eth.Contract(ERC20TransferABI, AURUM_ADDRESS)
-        console.log('getting balance from this wallet address: ', state.web3.walletId)
-        const result = await tokenInstance.methods.balanceOf(state.web3.walletId).call().catch(err => {
-          console.log('getting balance failed', err)
-        })
-        console.log("Got the following balance", result)
-        commit('setClaimableAmount', result) //eslint-disable-line  
+        const claimContractPolygon = '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b'
+        const cliamContractMumbai = '0x7fcA16Cb535DEf014b8984e9AAE55f2c23DB8C2f'
+        const claimContract = state.web3.testNetwork ? cliamContractMumbai : claimContractPolygon
+        const signer = web3.getSigner(0);
+        const contractInstance = new ethers.Contract(claimContract, claimABI, signer)
 
-        const receiverAddress = '0x1db669337a4bA132A81caA2dcDE257fbfAEa4CF7'
-        const claimResult = await tokenInstance.methods
-          .transfer(receiverAddress, store.state.claimAmount) // state.claimAmount
-          .send({ from: state.web3.walletId })
-        */
-
-        const claimContract = '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b'
-        const contractInstance = new web3.eth.Contract(claimABI, claimContract)
         let params = Object.assign({}, state.web3.claimParams)
-        params.address = '0x1db669337a4bA132A81caA2dcDE257fbfAEa4CF7' // overwriting with an address that has no claim to ensure I do not screw up my own claim by running this prematurely
-        // params.currentBonusAmount = store.state.claimAmount
-        params.maxBonusAmount = store.state.claimAmount
+        // params.address = '0x1db669337a4bA132A81caA2dcDE257fbfAEa4CF7' // overwriting with an address that has no claim to ensure I do not screw up my own claim by running this prematurely
         console.log('calling method with these params', params)
 
-        const claimResult = await contractInstance.methods.claim(params.index, params.address, params.maxBonusAmount, params.proof).call().catch(err => {
-          commit('setClaimStatus', ClaimStatus.ClaimFailed)
-          console.log(err)
+        const transaction = await contractInstance.claim(params.index, params.address, params.maxBonusAmount, params.proof)
+
+        commit('setClaimStatus', ClaimStatus.Processing) // Start waiting state once transaction is started
+
+        transaction.wait(3).then(async (receipt) => {
+          console.log(receipt)
+          var isClaimedResult = await contractInstance.isClaimed(params.index)
+          if (isClaimedResult) {
+            commit('setClaimStatus', ClaimStatus.ClaimDone)
+            wm.$confetti.start()
+          } else {
+            // Transaction is mined but claim is not done. Not supposed to occur
+            commit('setClaimStatus', ClaimStatus.ClaimFailed)
+          }
         })
-        console.log('claimResult', claimResult)
-        console.log(wm)
 
-        /*
-        // This part uses `send()` and awaits mining
-        // Also it checks contract for isClaimed state before it assumes claim is done
-        let checkInProgress = false
-        var claimResult = await contractInstance.methods.claim(params.index, params.address, params.maxBonusAmount, params.proof).send({ from: '0xde0B295669a9FD93d5F28D9Ec85E40f4cb697BAe' })
-          .on('transactionHash', function(hash){
-              console.log("transactionHash", hash);
-          })
-          .on('confirmation', async function(count, receipt){
-              console.log("Transaction confirmed", count, receipt);
-
-              if (!checkInProgress) {
-                checkInProgress = true // prevents this from being run each time a new block is mined and this call has not returned et
-                const claimContract = '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b'
-                const contractInstance = new web3.eth.Contract(claimABI, claimContract)
-                let params = Object.assign({}, state.web3.claimParams)
-                // console.log('calling method with these params', params)
-                var isClaimedResult = await contractInstance.methods.isClaimed(params.index).call().catch(err => {
-                  // commit('setClaimStatus', ClaimStatus.ClaimFailed)
-                  console.log(err)
-                })
-                // isClaimedResult = true // Simulate true
-                console.log('result of isClaimed call: ', isClaimedResult)
-                if (isClaimedResult) {
-                  console.log('we can show the baloons now')
-                  commit('setClaimStatus', ClaimStatus.ClaimDone)
-                  wm.$confetti.start()
-                } else {
-                  // Allow a new check on the contract to be made on next block confirmation
-                  checkInProgress = false
-                }
-              }
-          })
-          .on('error', err => {
-            console.log('sending failed', err)
-            if (err.code === 4001) {
-              commit('setClaimStatus', ClaimStatus.UserRejected)
-            } else {
-              commit('setClaimStatus', ClaimStatus.ClaimFailed)
-            }
-          })
-          */
-        console.log("Result of the claim call: ", claimResult)
-
-      } catch(e) {
-        console.error('claim failed and was not caught in expected error handler', e)
-        commit('setClaimStatus', ClaimStatus.ClaimFailed)
+      } catch(err) {
+        console.log(err)
+        if (err.code === 4001) {
+          commit('setClaimStatus', ClaimStatus.UserRejected)
+        } else {
+          commit('setClaimStatus', ClaimStatus.ClaimFailed)
+        }
       }
-
-      /*
-      window.setTimeout(() => {
-        context.commit('setClaimStatus', ClaimStatus.ClaimDone)
-        wm.$confetti.start()
-        wm.$confetti.update({
-          particles: [
-            {
-              type: 'heart',
-            },
-            {
-              type: 'circle',
-            },
-          ],
-        });
-      }, 2000)
-      */
     }
   }
 })

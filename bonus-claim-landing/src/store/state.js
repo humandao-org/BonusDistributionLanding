@@ -5,19 +5,22 @@ let state = {
   web3: {
     isInjected: false, // not in use
     web3Instance: null,
-    correctNetwork: false,
+    liveNetwork: false,
+    testNetwork: false,
     networkId: null,
     walletId: null,
     error: null,
-    claimStatus: ClaimStatus.Unknown,
     networks: [
       { id: 1, name: 'Ethereum' },
       { id: 56, name: 'Binance Smart Chain' },
-      { id: 137, name: 'Polygon' }
+      { id: 137, name: 'Polygon' },
+      { id: 80001, name: 'Mumbai' }
     ],
     claimParams: {}
   },
-  claimAmount: new BigNumber(0)
+  claimAmount: new BigNumber(0),
+  refillWallet: false,
+  claimStatus: ClaimStatus.Unknown,
 }
 
 export default state
