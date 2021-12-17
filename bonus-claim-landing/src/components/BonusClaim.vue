@@ -41,12 +41,11 @@
     </div>
     <div v-if="isEligible" id="congrats" class="block">
       <h1>Congratulations!</h1>
-      <h2>You just recieved:</h2>
+      <h1>You just recieved:</h1>
       <h1><input v-model="claimAmount" type="number" /></h1>
       <h1>$HDAO</h1>
       <h2>+NFT Genesis Badge!</h2>
       <h1>🤜🤛</h1>
-      <br/>
     </div>
     <div class="loader" v-if="doingClaim"></div>
   </div>
