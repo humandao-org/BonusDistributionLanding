@@ -89,7 +89,7 @@ input:focus {
 #claim, button {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   text-align: center;
-  color:#2c3e50;
+  color: white;
   background:#d3b0fb;
   font-size: 1.5em;
   border-radius: 10px;
@@ -97,6 +97,10 @@ input:focus {
   margin: 1rem;
   padding: 0.5rem 1.5rem;
   cursor: pointer;
+}
+
+#claim:hover {
+  background-image: linear-gradient(90deg, #00C0FF 0%, #FFCF00 49%, #FC4F4F 80%, #00C0FF 100%);
 }
 
 #claimable {
