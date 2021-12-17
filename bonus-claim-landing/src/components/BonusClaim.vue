@@ -35,8 +35,8 @@
       <h1><input v-model="claimAmount" type="number" /></h1>
       <h1>$HDAO</h1>
       <button v-if="isEligible" id="claim" @click="processClaim">Claim bonus</button>
-      <div>*You may only perform this action once per network, if applicable.</div>
-      <div>**Genesis Badge will automatically mint when you claim rewards.</div>
+      <div>*Genesis Badge will automatically mint when you claim rewards.</div>
+      <div>**You may only perform this action once per network, if applicable.</div>
       <br/>
       <!-- <button id="claim" @click="checkClaim">Check Claim</button> -->
     </div>
