@@ -7,7 +7,7 @@
     <div class="block">
         <h2 v-if="isConnected && liveNetwork">Connected with: <span class="purple">{{ truncatedAddress }}</span> on <span class="purple">{{ $store.getters.getNetwork.name }}</span></h2>
         <h2 v-else-if="isConnected && testNetwork">Connected with: <span class="purple">{{ truncatedAddress }}</span> on <span class="purple">{{ $store.getters.getNetwork.name }}</span><span v-if="testNetwork" style="color: darkred"> TEST NETWORK</span></h2>
-        <h2 v-else-if="isConnected">Wrong network detected. Please change your network to either Ethereum or Polygon</h2>
+        <h2 v-else-if="isConnected">Wrong network detected. <br/> Please change your network to either Ethereum or Polygon.</h2>
         <h2 v-else>Please connect to the Ethereum or Polygon Network.</h2>
         <button v-if="!isConnected" id="claim" @click="initiateConnection" style="margin-bottom: 0;">Connect wallet</button>
     </div>
@@ -25,7 +25,7 @@
     </div>
     <div v-if="refillWallet" class="warning">
       <br/>
-      NB! The current amount of HDAO tokens in your wallet is less than what you bought originally.<br/>Your bonus is being calculated based on what you currenly hold.<br/>Consider refilling your wallet before your claim to be able to the highest possible bonus (note, that it is not possible to add tokens later and claim a second time).
+      The current amount of HDAO tokens in your wallet is less than what you bought originally.<br/>Your bonus is being calculated based on what you currenly hold.<br/>Consider refilling your wallet to claim the highest possible bonus.
     </div>
     <div id="intro">
     </div>
@@ -34,18 +34,17 @@
       <!-- <h2>+Genesis NFT Badge</h2> -->
       <h1><input v-model="claimAmount" type="number" /></h1>
       <h1>$HDAO</h1>
-      <br/>
-      <div>*Genesis Badge will automatically mint when you claim rewards.</div>
       <button v-if="isEligible" id="claim" @click="processClaim">Claim bonus</button>
+      <div>*Genesis Badge will automatically mint when you claim rewards.</div>
+      <div>**You may only perform this action once per network, if applicable.</div>
       <!-- <button id="claim" @click="checkClaim">Check Claim</button> -->
     </div>
     <div v-if="claimSucceeded" id="congrats" class="block">
       <h1>Congratulations!</h1>
-      <h2>You just recieved:</h2>
+      <h1>You just recieved:</h1>
       <h1><input v-model="claimAmount" type="number" /></h1>
       <h1>$HDAO</h1>
-      <br/>
-      <h2>plus your very own humanDAO NFT Genesis Badge!</h2>
+      <h2>+NFT Genesis Badge!</h2>
       <h1>🤜🤛</h1>
     </div>
     <div class="loader" v-if="doingClaim"></div>
