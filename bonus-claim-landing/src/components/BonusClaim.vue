@@ -37,7 +37,6 @@
       <button v-if="isEligible" id="claim" @click="processClaim">Claim bonus</button>
       <div>*Genesis Badge will automatically mint when you claim rewards.</div>
       <div>**You may only perform this action once per network, if applicable.</div>
-      <br/>
       <!-- <button id="claim" @click="checkClaim">Check Claim</button> -->
     </div>
     <div v-if="claimSucceeded" id="congrats" class="block">
