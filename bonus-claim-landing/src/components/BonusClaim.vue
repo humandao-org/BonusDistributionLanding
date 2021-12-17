@@ -39,7 +39,7 @@
       <div>**You may only perform this action once per network, if applicable.</div>
       <!-- <button id="claim" @click="checkClaim">Check Claim</button> -->
     </div>
-    <div v-if="isEligible" id="congrats" class="block">
+    <div v-if="!claimSucceeded ||" id="congrats" class="block">
       <h1>Congratulations!</h1>
       <h1>You just recieved:</h1>
       <h1><input v-model="claimAmount" type="number" /></h1>
