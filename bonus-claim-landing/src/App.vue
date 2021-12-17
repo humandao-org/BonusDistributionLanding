@@ -38,6 +38,8 @@ body {
   color: #2c3e50;
   background: white;
   padding: 1em;
+  margin-top: 20px;
+
 }
 #logo {
   width: 100%;
