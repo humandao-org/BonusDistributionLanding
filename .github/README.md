@@ -1,6 +1,6 @@
 # Token Launch Auction Bonus
 
-A Vue.js app for participants in the humanDAO public sale ($HDAO) to claim bonus rewards. In order to claim rewards, you must use the wallet which originally participated in the token launch on its respective network. Furthermore, you may only perform this action once per network, if applicable. The reward includes an NFT Genesis Badge (created by [0xDane.eth](https://twitter.com/Cre8vDane)), which will automatically mint when claiming the bonus.
+A Vue.js app for participants in the humanDAO public sale to claim bonus rewards ($HDAO). In order to claim rewards, participants must use the wallet which originally purchased $HDAO at launch and on its respective network. Furthermore,  this action may only be performed once per network, if applicable. The reward includes an NFT Genesis Badge (created by [0xDane.eth](https://twitter.com/Cre8vDane)), which will automatically mint when participants claim their bonus.
 
 ## General Information
 
