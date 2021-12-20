@@ -107,7 +107,7 @@ export const store = new Vuex.Store({
     },
 
     async verifyClaim({ state, getters, commit }) {
-      const walletAddress =  state.web3.walletId // '0xc639D69168365CC56E203C59db1Cc9016cEbec4b' // Checking against an eligible wallet // 
+      const walletAddress =  state.web3.walletId
       const network = getters.getNetwork
       console.log('network', network)
       if (walletAddress && network) {
@@ -141,16 +141,19 @@ export const store = new Vuex.Store({
       }
     },
 
-    async processClaim({ commit, state }, { wm }) {
+    async processClaim({ commit, state, getters }, { wm }) {
 
       // Wrap with Web3Provider from ethers.js
       const web3 = new providers.Web3Provider(web3provider);
 
       try {
 
-        const claimContractPolygon = '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b'
+        const claimContractPolygon = '0x5d04ec89c918383fb0810f2ad6c956cb2e41b3db' // '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b' changed to deployed contract
+        const claimContractEthereum = '0xUNKNOWN'
         const cliamContractMumbai = '0x7fcA16Cb535DEf014b8984e9AAE55f2c23DB8C2f'
-        const claimContract = state.web3.testNetwork ? cliamContractMumbai : claimContractPolygon
+        const liveContractAddress = getters.getNetwork.name === 'Ethereum' ? claimContractEthereum : getters.getNetwork.name === 'Polygon' ? claimContractPolygon : 'InvalidContractAddress'
+        const claimContract = state.web3.testNetwork ? cliamContractMumbai : liveContractAddress
+        console.log('claim contract', claimContract)
         const signer = web3.getSigner(0);
         const contractInstance = new ethers.Contract(claimContract, claimABI, signer)
 
