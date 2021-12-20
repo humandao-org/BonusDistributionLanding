@@ -5,23 +5,11 @@ pipeline {
                 args '-p 3000:3000'
             }
         }
-    stages {
-        stage('compile') {
-            steps {
-                sh 'npm i'
+     stages {
+            stage('Build') {
+                steps {
+                    sh 'npm install'
+                }
             }
         }
-        stage('Test') {
-            steps {
-                sh './mvnw test'
-             }
-         }
-        stage('Package') {
-             steps {
-                 echo "-=- packaging project -=-"
-                 sh "./mvnw package -DskipTests"
-                 sh "./ci/package.sh"
-             }
-        }
-    }
 }
