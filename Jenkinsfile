@@ -1,15 +1,22 @@
 pipeline {
-     agent {
-            docker {
-                image 'node:lts-buster-slim'
-                args '-p 3000:3000'
+    agent any
+    stages {
+        stage('compile') {
+            steps {
+                sh './mvnw clean compile'
             }
         }
-     stages {
-            stage('Build') {
-                steps {
-                    sh 'npm install'
-                }
-            }
+        stage('Test') {
+            steps {
+                sh './mvnw test'
+             }
+         }
+        stage('Package') {
+             steps {
+                 echo "-=- packaging project -=-"
+                 sh "./mvnw package -DskipTests"
+                 sh "./ci/package.sh"
+             }
         }
+    }
 }
