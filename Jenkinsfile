@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('compile') {
             steps {
-                sh './mvnw clean compile'
+                sh 'npm i'
             }
         }
         stage('Test') {
