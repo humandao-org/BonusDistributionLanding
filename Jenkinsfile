@@ -16,5 +16,10 @@ pipeline {
                 sh 'npm run build'
             }
         }
+        stage('deploy') {
+            steps {
+                sh 'docker build -t humandao/bonus .'
+            }
+        }
     }
 }
