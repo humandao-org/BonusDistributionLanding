@@ -86,7 +86,8 @@ export default {
       return this.$store.state.claimStatus === ClaimStatus.Verifying
     },
     doingClaim() {
-      return this.$store.state.claimStatus === ClaimStatus.Processing
+      return true
+      // return this.$store.state.claimStatus === ClaimStatus.Processing
     },
     claimSucceeded() {
       return this.$store.state.claimStatus === ClaimStatus.ClaimDone
@@ -146,7 +147,7 @@ export default {
     width: 100%;
     height: 100%;
     background-color: #40437278;
-    background-image: url(/img/loading.4605b9d7.gif);
+    background-image: url('../assets/loading.gif');
     background-size: 13rem;
     background-repeat: no-repeat;
     background-position: center;
