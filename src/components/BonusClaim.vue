@@ -86,8 +86,7 @@ export default {
       return this.$store.state.claimStatus === ClaimStatus.Verifying
     },
     doingClaim() {
-      return true
-      // return this.$store.state.claimStatus === ClaimStatus.Processing
+      return this.$store.state.claimStatus === ClaimStatus.Processing
     },
     claimSucceeded() {
       return this.$store.state.claimStatus === ClaimStatus.ClaimDone

@@ -118,7 +118,6 @@ export const store = new Vuex.Store({
           const claimURLLive = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=${network.name.toUpperCase()}`
           const claimURL = state.web3.testNetwork ? claimURLMumbai : claimURLLive
           const response = await fetch(claimURL)
-          console.log(response)
           const result = await response.json()
           // console.log('result of checking claim', result)
           if (result.beneficiary && !result.claimed) {
