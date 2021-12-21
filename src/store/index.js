@@ -4,7 +4,7 @@ import state from './state'
 import { createProvider, web3provider, claimABI } from '../util/walletconnect' // ERC20TransferABI
 import { ClaimStatus } from '../util/enum'
 import Web3 from "web3";
-import { ethers, BigNumber } from 'ethers'
+import { ethers } from 'ethers' // BigNumber
 // import { BigNumber } from 'bignumber.js';
 import { providers } from "ethers";
 
@@ -118,14 +118,15 @@ export const store = new Vuex.Store({
           const claimURLLive = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=${network.name.toUpperCase()}`
           const claimURL = state.web3.testNetwork ? claimURLMumbai : claimURLLive
           const response = await fetch(claimURL)
+          console.log(response)
           const result = await response.json()
           // console.log('result of checking claim', result)
           if (result.beneficiary && !result.claimed) {
-            commit('setClaimableAmount', BigNumber.from(BigInt(result.currentBonusAmount))) //eslint-disable-line 
+            commit('setClaimableAmount', result.currentBonusAmount) //eslint-disable-line 
             commit('setRefillStatus', result.shouldFillUpBalance)
             commit('setClaimStatus', ClaimStatus.CanClaim)
             const { address, index, proof, maxBonusAmount } = result
-            commit('setContractParams', { address, index, proof, maxBonusAmount: BigNumber.from(BigInt(maxBonusAmount)) }) //eslint-disable-line 
+            commit('setContractParams', { address, index, proof, maxBonusAmount }) //eslint-disable-line 
           } else if(result.claimed) {
             console.log('has already claimed', result)
             commit('setClaimStatus', ClaimStatus.HasClaimed)
@@ -161,7 +162,7 @@ export const store = new Vuex.Store({
         // params.address = '0x1db669337a4bA132A81caA2dcDE257fbfAEa4CF7' // overwriting with an address that has no claim to ensure I do not screw up my own claim by running this prematurely
         console.log('calling method with these params', params)
 
-        const transaction = await contractInstance.claim(params.index, params.address, params.maxBonusAmount, params.proof)
+        const transaction = await contractInstance.claim(params.index, params.address, params.maxBonusAmount, params.proof) 
 
         commit('setClaimStatus', ClaimStatus.Processing) // Start waiting state once transaction is started
 
