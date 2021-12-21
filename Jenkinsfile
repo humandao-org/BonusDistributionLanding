@@ -1,7 +1,7 @@
 pipeline {
     agent none;
     stages {
-        stage('compile') {
+        stage('Compile') {
           agent {
                 docker {
                     image 'node:lts-buster-slim'
@@ -10,15 +10,11 @@ pipeline {
             }
             steps {
                 sh 'npm i'
-            }
-        }
-        stage('build') {
-            steps {
                 sh 'npm run build'
             }
         }
         stage('deploy') {
-            agent any
+            agent any;
             steps {
                 sh 'docker build -t humandao/bonus .'
             }
