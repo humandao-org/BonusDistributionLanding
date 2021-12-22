@@ -15,6 +15,7 @@
       Status:
       <span v-if="unknownEligibility"> ☝️ </span>
       <span v-else-if="checkingClaim">⌛</span>
+      <span v-else-if="checkingFailed">⛔ Sorry, an error ocurred while chcking your cliam. Please, try again later or contact us for support.</span>
       <span v-else-if="notEligible">⛔ Sorry... This wallet is not eligible for rewards.</span>
       <span v-else-if="doingClaim">⌛ Your claim is being processed. Please wait.</span>
       <span v-else-if="claimSucceeded">🎉 Your rewards have been succesfully claimed.</span>
@@ -96,6 +97,9 @@ export default {
     },
     claimFailed() {
       return this.$store.state.claimStatus === ClaimStatus.ClaimFailed
+    },
+    checkingFailed() {
+      return this.$store.state.claimStatus === ClaimStatus.VerificationFailed
     },
     userRejected() {
       return this.$store.state.claimStatus === ClaimStatus.UserRejected

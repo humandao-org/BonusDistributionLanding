@@ -8,5 +8,6 @@ export const ClaimStatus = {
   HasClaimed: 6, // previously claimed
   ClaimFailed: 7,
   UserRejected: 8,
-  ClaimTimedOut: 9
+  ClaimTimedOut: 9,
+  VerificationFailed: 10
 }

@@ -117,21 +117,26 @@ export const store = new Vuex.Store({
           const claimURLMumbai = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=POLYGON_MUMBAI`
           const claimURLLive = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=${network.name.toUpperCase()}`
           const claimURL = state.web3.testNetwork ? claimURLMumbai : claimURLLive
-          const response = await fetch(claimURL)
-          const result = await response.json()
-          // console.log('result of checking claim', result)
-          if (result.beneficiary && !result.claimed) {
-            commit('setClaimableAmount', result.currentBonusAmount) //eslint-disable-line 
-            commit('setRefillStatus', result.shouldFillUpBalance)
-            commit('setClaimStatus', ClaimStatus.CanClaim)
-            const { address, index, proof, maxBonusAmount } = result
-            commit('setContractParams', { address, index, proof, maxBonusAmount }) //eslint-disable-line 
-          } else if(result.claimed) {
-            console.log('has already claimed', result)
-            commit('setClaimStatus', ClaimStatus.HasClaimed)
-          } else {
-            console.log('could not verify claim', result)
-            commit('setClaimStatus', ClaimStatus.CannotClaim)
+          try {
+            const response = await fetch(claimURL)
+            const result = await response.json()
+            // console.log('result of checking claim', result)
+            if (result.beneficiary && !result.claimed) {
+              commit('setClaimableAmount', result.currentBonusAmount) //eslint-disable-line 
+              commit('setRefillStatus', result.shouldFillUpBalance)
+              commit('setClaimStatus', ClaimStatus.CanClaim)
+              const { address, index, proof, maxBonusAmount } = result
+              commit('setContractParams', { address, index, proof, maxBonusAmount }) //eslint-disable-line 
+            } else if(result.claimed) {
+              console.log('has already claimed', result)
+              commit('setClaimStatus', ClaimStatus.HasClaimed)
+            } else {
+              console.log('could not verify claim', result)
+              commit('setClaimStatus', ClaimStatus.CannotClaim)
+            }
+          } catch (err) {
+            commit('setClaimStatus', ClaimStatus.VerificationFailed)
+            console.log(err)
           }
         } else {
           console.log('not connected to correct network')
