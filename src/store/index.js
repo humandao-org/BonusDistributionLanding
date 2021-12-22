@@ -148,8 +148,8 @@ export const store = new Vuex.Store({
 
       try {
 
-        const claimContractPolygon = '0x5d04ec89c918383fb0810f2ad6c956cb2e41b3db' // '0xBDAb8B19F2D43780303c1CdE00c245AC62d4054b' changed to deployed contract
-        const claimContractEthereum = '0xUNKNOWN'
+        const claimContractPolygon = '0x5d04ec89c918383fb0810f2ad6c956cb2e41b3db'
+        const claimContractEthereum = '0xD53b145739352c1BCc7079cDdA0cf6EDfbd8F015'
         const cliamContractMumbai = '0x7fcA16Cb535DEf014b8984e9AAE55f2c23DB8C2f'
         const liveContractAddress = getters.getNetwork.name === 'Ethereum' ? claimContractEthereum : getters.getNetwork.name === 'Polygon' ? claimContractPolygon : 'InvalidContractAddress'
         const claimContract = state.web3.testNetwork ? cliamContractMumbai : liveContractAddress
