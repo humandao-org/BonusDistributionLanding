@@ -8,6 +8,14 @@ import { ethers } from 'ethers' // BigNumber
 // import { BigNumber } from 'bignumber.js';
 import { providers } from "ethers";
 
+const ethLookup = require('../data/eth_lookup.json');
+const polyLookup = require('../data/poly_lookup.json');
+
+const bonusLookup = {
+  'Ethereum': ethLookup,
+  'Polygon': polyLookup,
+}
+
 Vue.use(Vuex)
 
 export const store = new Vuex.Store({
@@ -53,7 +61,7 @@ export const store = new Vuex.Store({
       state.web3.walletId = id
     },
     setClaimableAmount(state, amount) {
-      state.claimAmount = ethers.BigNumber.from(amount)
+      state.claimAmount = ethers.utils.parseEther(amount.toString())
     },
     setClaimStatus(state, status) {
       state.claimStatus = status
@@ -107,22 +115,24 @@ export const store = new Vuex.Store({
     },
 
     async verifyClaim({ state, getters, commit }) {
-      const walletAddress =  state.web3.walletId
+      const walletAddress = state.web3.walletId
       const network = getters.getNetwork
       console.log('network', network)
       if (walletAddress && network) {
         if (state.web3.liveNetwork || state.web3.testNetwork) {
           commit('setClaimStatus', ClaimStatus.Verifying)
           // this.$config
+
           const claimURLMumbai = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=POLYGON_MUMBAI`
           const claimURLLive = `https://api.defitrack.io/humandao/bonus-distribution/${walletAddress}?network=${network.name.toUpperCase()}`
           const claimURL = state.web3.testNetwork ? claimURLMumbai : claimURLLive
           try {
             const response = await fetch(claimURL)
             const result = await response.json()
-            // console.log('result of checking claim', result)
+            const bonusAmount = bonusLookup[network.name][walletAddress.toLowerCase()];
+            console.log('result of checking claim', result)
             if (result.beneficiary && !result.claimed) {
-              commit('setClaimableAmount', result.currentBonusAmount) //eslint-disable-line 
+              commit('setClaimableAmount', bonusAmount) //eslint-disable-line 
               commit('setRefillStatus', result.shouldFillUpBalance)
               commit('setClaimStatus', ClaimStatus.CanClaim)
               const { address, index, proof, maxBonusAmount } = result
